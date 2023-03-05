@@ -13,9 +13,13 @@ services:
   prometheus:
     image: prom/prometheus:v2.42.0
     container_name: prometheus
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
     volumes:
-      - ./prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
+      - ${MOUNT_POINT}/prometheus:/etc/prometheus
+      - ${MOUNT_POINT}/prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -34,8 +38,12 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.25.0
     container_name: alertmanager
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
     volumes:
-      - ./alertmanager:/etc/alertmanager
+      - ${MOUNT_POINT}/alertmanager:/etc/alertmanager
     command:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
@@ -50,6 +58,10 @@ services:
   nodeexporter:
     image: prom/node-exporter:v1.5.0
     container_name: nodeexporter
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -70,6 +82,10 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.1
     container_name: cadvisor
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
     privileged: true
     devices:
       - /dev/kmsg:/dev/kmsg
@@ -90,10 +106,14 @@ services:
   grafana:
     image: grafana/grafana:9.4.1
     container_name: grafana
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ${MOUNT_POINT}/grafana_data:/var/lib/grafana
+      - ${MOUNT_POINT}/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ${MOUNT_POINT}/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     environment:
       - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
@@ -109,9 +129,13 @@ services:
   pushgateway:
     image: prom/pushgateway:v1.5.1
     container_name: pushgateway
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
     restart: unless-stopped
     expose:
-      - 9091
+      - 9092
     networks:
       - monitor-net
     labels:
@@ -120,14 +144,18 @@ services:
   caddy:
     image: caddy:2.6.4
     container_name: caddy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
     ports:
       - "3000:3000"
       - "8080:8080"
       - "9090:9090"
       - "9093:9093"
-      - "9091:9091"
+      - "9092:9092"
     volumes:
-      - ./caddy:/etc/caddy
+      - ${MOUNT_POINT}/caddy:/etc/caddy
     environment:
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
